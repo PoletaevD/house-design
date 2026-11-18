@@ -1,0 +1,97 @@
+
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#242026">
+    <title>Atelier — Студия интерьера</title>
+    <style>
+        html, body { margin: 0; overflow: hidden; background: #242026; }
+        body {
+            position: fixed;
+            inset: 0;
+            height: 100%;
+            height: 100dvh;
+            font: 14px/1.45 system-ui, sans-serif;
+            color: #efddcc;
+        }
+        #unity-canvas { display: block; width: 100%; height: 100%; outline: none; touch-action: none; }
+        .loader { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; }
+        .loader[hidden] { display: none; }
+        .mark { display: grid; width: 48px; height: 48px; place-items: center; color: #30232a; background: #e3a77c; border-radius: 0 14px; font-size: 25px; font-weight: 700; }
+        h1 { margin: 12px 0 3px; font-size: 25px; letter-spacing: .12em; }
+        p { margin: 0 18px 14px; text-align: center; }
+        progress { width: 175px; height: 6px; accent-color: #e3a77c; }
+    </style>
+</head>
+<body>
+    <canvas id="unity-canvas" tabindex="0" aria-label="Atelier, студия интерьера"></canvas>
+    <div id="loading" class="loader" role="status">
+        <div class="mark" aria-hidden="true">A</div>
+        <h1>ATELIER</h1>
+        <p id="message">Открываем студию интерьера</p>
+        <progress id="progress" max="1" value="0" aria-label="Загрузка"></progress>
+    </div>
+    <script>
+        const canvas = document.getElementById("unity-canvas");
+        const loader = document.createElement("script");
+        const loading = document.getElementById("loading");
+        const progress = document.getElementById("progress");
+        const message = document.getElementById("message");
+        const build = "Build/";
+
+        canvas.addEventListener("contextmenu", (event) => event.preventDefault());
+        canvas.addEventListener("pointerdown", preventMiddleClick);
+
+        loader.src = build + "{{{ LOADER_FILENAME }}}";
+        loader.onerror = () => reportError("Загрузчик Unity недоступен.");
+        loader.onload = startStudio;
+
+        document.body.appendChild(loader);
+
+        function preventMiddleClick(event)
+        {
+            if (event.button === 1)
+            {
+                event.preventDefault();
+            }
+        }
+
+        function startStudio()
+        {
+            const config =
+            {
+                dataUrl: build + "{{{ DATA_FILENAME }}}",
+                frameworkUrl: build + "{{{ FRAMEWORK_FILENAME }}}",
+                codeUrl: build + "{{{ CODE_FILENAME }}}",
+                streamingAssetsUrl: "StreamingAssets",
+                companyName: "Atelier",
+                productName: "Atelier",
+                productVersion: "{{{ PRODUCT_VERSION }}}",
+                matchWebGLToCanvasSize: true,
+                devicePixelRatio: Math.min(window.devicePixelRatio || 1, 1.5)
+            };
+
+            createUnityInstance(canvas, config, updateProgress).then(showStudio).catch(reportError);
+        }
+
+        function updateProgress(value)
+        {
+            progress.value = value;
+        }
+
+        function showStudio()
+        {
+            loading.hidden = true;
+            canvas.focus({ preventScroll: true });
+        }
+
+        function reportError(error)
+        {
+            progress.hidden = true;
+            message.textContent = "Студия не запустилась. " + error;
+        }
+    </script>
+</body>
+</html>

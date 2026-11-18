@@ -245,6 +245,7 @@ namespace HouseDesign
                 var target = entering ? _walkDestination : destination;
                 _camera.transform.SetPositionAndRotation(Vector3.Lerp(start, target, value) + Vector3.up * lift, Quaternion.Slerp(facing, rotation, value));
                 _walkProjection = Mathf.Lerp(firstProjection, lastProjection, value);
+                UpdateCeilingVisibility();
                 ShowExterior(_walkProjection > .8f);
                 BlendView(_walkProjection);
                 NotifyViewChanged();
@@ -278,9 +279,18 @@ namespace HouseDesign
             _camera.fieldOfView = WalkFov;
             _camera.nearClipPlane = firstPerson ? .05f : .1f;
             _camera.ResetProjectionMatrix();
+            UpdateCeilingVisibility();
             ShowExterior(firstPerson);
             UpdateCutaway();
             NotifyViewChanged();
+        }
+
+        private void UpdateCeilingVisibility()
+        {
+            if (_ceilings != null)
+            {
+                _ceilings.gameObject.SetActive(Walking && _camera.transform.position.y < _plan.WallHeight - _camera.nearClipPlane);
+            }
         }
 
         private void ShowExterior(bool visible)
@@ -429,6 +439,7 @@ namespace HouseDesign
                 camera.orthographicSize = OrthographicFit(bounds, rotation, camera.aspect);
                 camera.ResetProjectionMatrix();
                 camera.transform.SetPositionAndRotation(center - rotation * Vector3.forward * distance, rotation);
+                _ceilings.gameObject.SetActive(false);
                 ApplyCutaway(camera.transform.forward, true);
                 var request = new UniversalRenderPipeline.SingleCameraRequest
                 {
@@ -438,6 +449,7 @@ namespace HouseDesign
             }
             finally
             {
+                UpdateCeilingVisibility();
                 UpdateCutaway();
                 _root.gameObject.SetActive(previous);
 

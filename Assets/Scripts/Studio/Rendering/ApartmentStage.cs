@@ -26,6 +26,7 @@ namespace HouseDesign
         private readonly Light _fill;
         private readonly GameObject _windowDaylight;
         private readonly Material _edge;
+        private readonly Material _ceiling;
         private readonly Material _frame;
         private readonly Material _glass;
         private readonly Material _door;
@@ -43,6 +44,7 @@ namespace HouseDesign
         private readonly List<(Renderer[] Walls, Collider[] Hits, Transform Low, Vector2 Inward)> _cutWalls = new();
 
         private Transform _structure;
+        private Transform _ceilings;
         private Transform _items;
         private Transform _ghost;
         private Transform _ghostModel;
@@ -96,6 +98,7 @@ namespace HouseDesign
             _fill.transform.rotation = Quaternion.Euler(61f, 135f, 0f);
 
             _edge = materials.ColorMaterial("#AAA098", .24f);
+            _ceiling = materials.ColorMaterial("#F4EEE5", .12f);
             _frame = materials.ColorMaterial("#524843", .35f);
             _glass = Resources.Load<Material>("ApartmentGlass");
             _door = materials.ColorMaterial("#9C7861", .22f);
@@ -181,6 +184,7 @@ namespace HouseDesign
             DestroyChild(_exterior);
             _exterior = null;
             _structure = Child(_root, "Floors and walls");
+            _ceilings = Child(_structure, "Ceilings");
             _items = Child(_root, "Placed objects");
             _cutWalls.Clear();
             _wallHits.Clear();
@@ -201,6 +205,11 @@ namespace HouseDesign
                 var textureTransform = new Vector4(size.x * tiles, size.y * tiles, room.Bounds.xMin * tiles, -room.Bounds.yMax * tiles);
 
                 _geometry.Box(_structure, World(room.Bounds.center, -.085f), new Vector3(size.x, .17f, size.y), finish.Material, textureTransform);
+
+                const float CeilingThickness = .1f;
+                var ceilingCenter = World(room.Bounds.center, _plan.WallHeight + CeilingThickness / 2f);
+                var ceiling = _geometry.Box(_ceilings, ceilingCenter, new Vector3(size.x, CeilingThickness, size.y), _ceiling);
+                ceiling.GetComponent<Renderer>().shadowCastingMode = ShadowCastingMode.Off;
             }
 
             foreach (var wall in _plan.Walls)
@@ -215,6 +224,7 @@ namespace HouseDesign
 
             UpdateCutaway();
             UpdateDaylight();
+            UpdateCeilingVisibility();
 
             if (Walking)
             {

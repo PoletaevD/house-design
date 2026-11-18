@@ -42,7 +42,8 @@
         const build = "Build/";
 
         canvas.addEventListener("contextmenu", (event) => event.preventDefault());
-        canvas.addEventListener("pointerdown", preventMiddleClick);
+        // Unity WebGL needs mousedown, which a canceled pointerdown can suppress.
+        canvas.addEventListener("mousedown", preventMiddleClick);
 
         loader.src = build + "{{{ LOADER_FILENAME }}}";
         loader.onerror = () => reportError("Загрузчик Unity недоступен.");
